@@ -1,63 +1,64 @@
-# E-Commerce Sales & Customer Analysis (SQL + Python)
+# Sales Demand Forecasting
 
-🔗 **Live dashboard:** https://ecommerce-sales-analysis-sql-fvzszzdahsj6vdc3yzoqzh.streamlit.app/
+🔗 **Live dashboard:** https://sales-demand-forecasting-esbgsgxsqec3bhxdveokam.streamlit.app/
 
-A business analytics project demonstrating SQL-based revenue analysis, customer
-segmentation, and trend analysis on e-commerce transaction data.
+A time-series forecasting project predicting daily product demand using
+Holt-Winters exponential smoothing — directly demonstrating forecasting and
+prediction skills for data-driven business planning.
 
 ## Dataset
 
-**Note: This is a synthetically generated dataset** (`generate_data.py`), created
-with realistic seasonal patterns (festive-season demand spike in Nov–Dec),
-category price ranges, and customer/region distributions, seeded for
-reproducibility. It is not scraped or sourced from any real company's data —
-built this way so the project is self-contained and reproducible without
-external downloads.
+**Note: This is a synthetically generated dataset** (`generate_demand_data.py`),
+built with a realistic upward trend, weekly seasonality (weekend demand boost),
+yearly seasonality (festive-season spike in Nov–Dec), and random noise —
+seeded for reproducibility. Not scraped or sourced from any real company's data.
 
-- **customers.csv** — 400 customers (customer_id, region, signup_date)
-- **orders.csv** — 6,692 orders (order_id, customer_id, order_date, category,
-  quantity, unit_price, revenue), spanning Sep 2025 – Aug 2026
+- **demand.csv** — 730 days (2 years) of daily unit sales for one product category
 
-## What This Project Demonstrates
+## Approach
 
-- SQL: `JOIN`, `GROUP BY`, aggregation, and window functions (`RANK()`, `LAG()`)
-- Business KPIs: monthly revenue trend, month-over-month growth, top customers,
-  category revenue share, regional performance
-- Python: pulling SQL query results into Pandas and visualizing with Matplotlib
+1. **Model:** Holt-Winters triple exponential smoothing (additive trend,
+   additive weekly seasonality, period = 7)
+2. **Validation:** Trained on all but the last 60 days; evaluated forecast
+   accuracy against that held-out period
+3. **Forecast:** Refit on full history, produced a 30-day forward forecast
+4. **Metrics:** MAE, RMSE, MAPE
 
 ## Live Dashboard
 
-An interactive Streamlit dashboard (`app.py`) is included — with sidebar filters for
-date range, region, and category, live KPI cards, and the same SQL-driven charts
-as above.
+An interactive Streamlit dashboard (`app.py`) is included — adjust the test
+window, forecast horizon, and seasonality period live, retrain the model on
+the fly, and download the forecast as CSV.
 
-🔗 **Live app:** https://ecommerce-sales-analysis-sql-fvzszzdahsj6vdc3yzoqzh.streamlit.app/
+🔗 **Live app:** https://sales-demand-forecasting-esbgsgxsqec3bhxdveokam.streamlit.app/
 
-## Key Results (from actual query output — see `analysis.py`)
+## Results (from actual model run — see `forecast.py`)
 
-- **Electronics** is the top revenue category at **66.35%** of total revenue
-- **North** region generates the highest total revenue (₹16.47M), while
-  **Central** has the highest revenue per active customer (₹180,314.77)
-- **Peak month: December 2025** (₹10.33M revenue) — consistent with the
-  built-in festive-season demand spike
-- **Average month-over-month growth: 3.25%** across the 12-month period
-- Top customer (`CUST0298`, East region) generated ₹450,540 across 29 orders
+| Metric | Value |
+|---|---|
+| MAE (held-out test) | 23.20 units |
+| RMSE (held-out test) | 27.80 units |
+| MAPE (held-out test) | 5.99% |
 
-Full query outputs, including the top-10 customer ranking and full
-month-by-month growth table, are in `analysis.py`'s printed output.
+A MAPE under 6% indicates the model's forecasts are, on average, within ~6%
+of actual demand — a strong result for a demand-forecasting use case, and
+directly usable for inventory/staffing planning decisions.
+
+See `forecast_vs_actual.png` (test-period accuracy) and `future_forecast.png`
+(30-day forward forecast) for visualizations, and `forecast_next_30_days.csv`
+for the raw forecasted values.
 
 ## Project Structure
 
 ```
-├── generate_data.py             # Generates the synthetic dataset
-├── load_to_sqlite.py            # Loads CSVs into ecommerce.db (SQLite)
-├── queries.sql                  # All 5 SQL queries (JOIN, GROUP BY, window functions)
-├── analysis.py                  # Runs queries, prints results, generates charts
+├── generate_demand_data.py     # Generates the synthetic daily demand dataset
+├── forecast.py                  # Trains Holt-Winters model, evaluates, forecasts
 ├── app.py                       # Streamlit interactive dashboard (deployable)
-├── customers.csv, orders.csv    # Generated dataset
-├── ecommerce.db                 # SQLite database
-├── monthly_revenue_trend.png
-├── category_revenue_share.png
+├── demand.csv                   # Generated dataset
+├── forecast_vs_actual.png       # Test-period accuracy chart
+├── future_forecast.png          # 30-day forward forecast chart
+├── forecast_next_30_days.csv    # Raw forecast values
+├── metrics.json                 # MAE / RMSE / MAPE
 └── requirements.txt
 ```
 
@@ -65,15 +66,15 @@ month-by-month growth table, are in `analysis.py`'s printed output.
 
 ```bash
 pip install -r requirements.txt
-python generate_data.py     # generates customers.csv and orders.csv
-python load_to_sqlite.py    # loads them into ecommerce.db
-python analysis.py          # runs all SQL queries, prints results, saves charts
-streamlit run app.py        # launches the interactive dashboard locally
+python generate_demand_data.py   # generates demand.csv
+python forecast.py               # trains model, evaluates, forecasts, saves charts
+streamlit run app.py             # launches the interactive dashboard locally
 ```
 
 ## Tech Stack
 
-Python, SQLite (SQL), Pandas, Matplotlib
+Python, Statsmodels (Holt-Winters / Exponential Smoothing), Pandas, NumPy,
+Scikit-learn (metrics), Matplotlib
 
 ## Author
 
